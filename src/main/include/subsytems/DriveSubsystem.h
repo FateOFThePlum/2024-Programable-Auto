@@ -33,6 +33,15 @@ class DriveSubsystem : public frc2::SubsystemBase {
    * @param rot the commanded rotation
    */
   void ArcadeDrive(double fwd, double rot);
+  
+  /**
+   * Drives the robot using ChassisSpeeds.
+   * It was made for using pathplanner.
+   *
+   * @param ChassisSpeeds the commanded Robot Reletive Chassis speeds
+   */
+  void ChassisSpeedTankDrive(frc::ChassisSpeeds ChassisSpeeds);
+
 
   /**
    * Controls each side of the drive directly with a voltage.

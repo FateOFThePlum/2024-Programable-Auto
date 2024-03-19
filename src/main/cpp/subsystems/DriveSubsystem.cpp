@@ -2,13 +2,24 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-#include "subsystems/DriveSubsystem.h"
+#include "subsytems\DriveSubsystem.h"
 
 #include <frc/geometry/Rotation2d.h>
 #include <frc/kinematics/DifferentialDriveWheelSpeeds.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 
+#include <pathplanner/lib/auto/AutoBuilder.h>
+#include <pathplanner/lib/util/HolonomicPathFollowerConfig.h>
+#include <pathplanner/lib/util/PIDConstants.h>
+#include <pathplanner/lib/util/ReplanningConfig.h>
+#include <frc/geometry/Pose2d.h>
+#include <frc/kinematics/ChassisSpeeds.h>
+#include <frc/DriverStation.h>
+
+#include <frc/controller/SimpleMotorFeedforward.h>
+
 using namespace DriveConstants;
+using namespace pathplanner;
 
 DriveSubsystem::DriveSubsystem()
     : m_left1{kLeftMotor1Port},
@@ -40,16 +51,16 @@ DriveSubsystem::DriveSubsystem()
         [this](){ return GetPose(); }, // Robot pose supplier
         [this](frc::Pose2d pose){ ResetOdometry(pose); }, // Method to reset odometry (will be called if your auto has a starting pose)
         [this](){ return GetChassisSpeeds(); }, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-        [this](frc::ChassisSpeeds speeds){ driveRobotRelative(speeds); }, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+        [this](frc::ChassisSpeeds speeds){ ChassisSpeedTankDrive(speeds); }, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
         ReplanningConfig(), // Default path replanning config. See the API for the options here
         []() {
             // Boolean supplier that controls when the path will be mirrored for the red alliance
             // This will flip the path being followed to the red side of the field.
             // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-            auto alliance = DriverStation::GetAlliance();
+            auto alliance = frc::DriverStation::GetAlliance();
             if (alliance) {
-                return alliance.value() == DriverStation::Alliance::kRed;
+                return alliance.value() == frc::DriverStation::Alliance::kRed;
             }
             return false;
         },
@@ -69,12 +80,24 @@ void DriveSubsystem::ArcadeDrive(double fwd, double rot) {
 }
 
 void DriveSubsystem::ChassisSpeedTankDrive(frc::ChassisSpeeds ChassisSpeeds){
+  //These values NEED to be put into the constraints file, I am just trying to get a working version right now.
+  //I will Tidy up once the auto is somewhat functional. 
+
+  //Numbers are copied for debugging purposes
+  constexpr auto kS = 1.04_V; //1.52_V;
+  constexpr auto kV = 0.00814 * 1_V * 1_s / 1_in;  //0.00935 * 1_V * 1_s / 1_m; 
+  constexpr auto kA = 0.00215 * 1_V * 1_s * 1_s / 1_in; //0.000222 * 1_V * 1_s * 1_s / 1_m; 
+  
   frc::DifferentialDriveKinematics kinematics{27_in}; //Not Correct
+  frc::SimpleMotorFeedforward<units::meters> feedforward(kS, kV, kA); //Put this in a diffent file so it is only called once "exampleClass::feedfoward"?
+  
   auto [left, right] = kinematics.ToWheelSpeeds(ChassisSpeeds);
   
-  //I need to add wheel Driving
+  m_left1.SetVoltage(feedforward.Calculate(left));
+  m_left2.SetVoltage(feedforward.Calculate(left));
+  m_right1.SetVoltage(feedforward.Calculate(right));
+  m_right1.SetVoltage(feedforward.Calculate(right));
 }
-
 
 void DriveSubsystem::TankDriveVolts(units::volt_t left, units::volt_t right) {
   m_left1.SetVoltage(left);
