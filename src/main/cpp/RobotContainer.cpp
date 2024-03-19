@@ -18,6 +18,8 @@
 
 #include "Constants.h"
 
+#include <pathplanner/lib/commands/PathPlannerAuto.h>
+
 RobotContainer::RobotContainer() {
   // Initialize all of your commands and subsystems here
 
@@ -42,53 +44,9 @@ void RobotContainer::ConfigureButtonBindings() {
       .OnFalse(&m_driveFullSpeed);
 }
 
-frc2::CommandPtr RobotContainer::GetAutonomousCommand() {
-  // Create a voltage constraint to ensure we don't accelerate too fast
-  frc::DifferentialDriveVoltageConstraint autoVoltageConstraint{
-      frc::SimpleMotorFeedforward<units::meters>{
-          DriveConstants::ks, DriveConstants::kv, DriveConstants::ka},
-      DriveConstants::kDriveKinematics, 10_V};
 
-  // Set up config for trajectory
-  frc::TrajectoryConfig config{AutoConstants::kMaxSpeed,
-                               AutoConstants::kMaxAcceleration};
-  // Add kinematics to ensure max speed is actually obeyed
-  config.SetKinematics(DriveConstants::kDriveKinematics);
-  // Apply the voltage constraint
-  config.AddConstraint(autoVoltageConstraint);
+using namespace pathplanner;
 
-  // An example trajectory to follow.  All units in meters.
-  auto exampleTrajectory = frc::TrajectoryGenerator::GenerateTrajectory(
-      // Start at the origin facing the +X direction
-      frc::Pose2d{0_m, 0_m, 0_deg},
-      // Pass through these two interior waypoints, making an 's' curve path
-      {frc::Translation2d{1_m, 1_m}, frc::Translation2d{2_m, -1_m}},
-      // End 3 meters straight ahead of where we started, facing forward
-      frc::Pose2d{3_m, 0_m, 0_deg},
-      // Pass the config
-      config);
-
-  frc2::CommandPtr ramseteCommand{frc2::RamseteCommand(
-      exampleTrajectory, [this] { return m_drive.GetPose(); },
-      frc::RamseteController{AutoConstants::kRamseteB,
-                             AutoConstants::kRamseteZeta},
-      frc::SimpleMotorFeedforward<units::meters>{
-          DriveConstants::ks, DriveConstants::kv, DriveConstants::ka},
-      DriveConstants::kDriveKinematics,
-      [this] { return m_drive.GetWheelSpeeds(); },
-      frc::PIDController{DriveConstants::kPDriveVel, 0, 0},
-      frc::PIDController{DriveConstants::kPDriveVel, 0, 0},
-      [this](auto left, auto right) { m_drive.TankDriveVolts(left, right); },
-      {&m_drive})};
-
-  // Reset odometry to the initial pose of the trajectory, run path following
-  // command, then stop at the end.
-  return frc2::cmd::RunOnce(
-             [this, initialPose = exampleTrajectory.InitialPose()] {
-               m_drive.ResetOdometry(initialPose);
-             },
-             {})
-      .AndThen(std::move(ramseteCommand))
-      .AndThen(
-          frc2::cmd::RunOnce([this] { m_drive.TankDriveVolts(0_V, 0_V); }, {}));
+frc2::CommandPtr RobotContainer::GetAutonomousCommand(){
+    return PathPlannerAuto("Example Auto").ToPtr(); //Add Chooser at some point?
 }
