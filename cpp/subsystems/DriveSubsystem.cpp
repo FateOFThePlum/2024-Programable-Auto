@@ -6,6 +6,7 @@
 
 #include <frc/geometry/Rotation2d.h>
 #include <frc/kinematics/DifferentialDriveWheelSpeeds.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 
 using namespace DriveConstants;
 
@@ -33,6 +34,27 @@ DriveSubsystem::DriveSubsystem()
   m_rightEncoder.SetDistancePerPulse(kEncoderDistancePerPulse.value());
 
   ResetEncoders();
+  
+  //Configure AutoBuilder For PathPlanner
+  AutoBuilder::configureRamsete(
+        [this](){ return GetPose(); }, // Robot pose supplier
+        [this](frc::Pose2d pose){ ResetOdometry(pose); }, // Method to reset odometry (will be called if your auto has a starting pose)
+        [this](){ return GetChassisSpeeds(); }, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+        [this](frc::ChassisSpeeds speeds){ driveRobotRelative(speeds); }, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+        ReplanningConfig(), // Default path replanning config. See the API for the options here
+        []() {
+            // Boolean supplier that controls when the path will be mirrored for the red alliance
+            // This will flip the path being followed to the red side of the field.
+            // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+            auto alliance = DriverStation::GetAlliance();
+            if (alliance) {
+                return alliance.value() == DriverStation::Alliance::kRed;
+            }
+            return false;
+        },
+        this // Reference to this subsystem to set requirements
+    );
 }
 
 void DriveSubsystem::Periodic() {
@@ -45,6 +67,14 @@ void DriveSubsystem::Periodic() {
 void DriveSubsystem::ArcadeDrive(double fwd, double rot) {
   m_drive.ArcadeDrive(fwd, rot);
 }
+
+void DriveSubsystem::ChassisSpeedTankDrive(frc::ChassisSpeeds ChassisSpeeds){
+  frc::DifferentialDriveKinematics kinematics{27_in}; //Not Correct
+  auto [left, right] = kinematics.ToWheelSpeeds(ChassisSpeeds);
+  
+  //I need to add wheel Driving
+}
+
 
 void DriveSubsystem::TankDriveVolts(units::volt_t left, units::volt_t right) {
   m_left1.SetVoltage(left);
@@ -88,6 +118,11 @@ frc::Pose2d DriveSubsystem::GetPose() {
 frc::DifferentialDriveWheelSpeeds DriveSubsystem::GetWheelSpeeds() {
   return {units::meters_per_second_t{m_leftEncoder.GetRate()},
           units::meters_per_second_t{m_rightEncoder.GetRate()}};
+}
+
+frc::ChassisSpeeds DriveSubsystem::GetChassisSpeeds(){ //Get Wheel speeds from GetWheelSpeeds and returns Chassis Speeds
+  frc::DifferentialDriveKinematics kinematics{21.75_in}; //Actual Center distance Between Wheels is 21.75 in or 0.55245 meter
+  return kinematics.ToChassisSpeeds(GetWheelSpeeds());
 }
 
 void DriveSubsystem::ResetOdometry(frc::Pose2d pose) {

@@ -105,6 +105,14 @@ class DriveSubsystem : public frc2::SubsystemBase {
   frc::DifferentialDriveWheelSpeeds GetWheelSpeeds();
 
   /**
+  *
+  *
+  *
+  *@return The ChassisSpeeds Of the robot
+  */
+  frc::ChassisSpeeds GetChassisSpeeds();
+
+  /**
    * Resets the odometry to the specified pose.
    *
    * @param pose The pose to which to set the odometry.
