@@ -48,5 +48,5 @@ void RobotContainer::ConfigureButtonBindings() {
 using namespace pathplanner;
 
 frc2::CommandPtr RobotContainer::GetAutonomousCommand(){
-    return PathPlannerAuto("Example Auto").ToPtr(); //Add Chooser at some point?
+    return PathPlannerAuto("S Auto").ToPtr(); //Add Chooser at some point?
 }
