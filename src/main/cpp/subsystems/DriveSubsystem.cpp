@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-#include "subsystems\DriveSubsystem.h"
+#include "subsystems/DriveSubsystem.h"
 
 #include <frc/geometry/Rotation2d.h>
 #include <frc/kinematics/DifferentialDriveWheelSpeeds.h>
@@ -15,6 +15,7 @@
 #include <frc/geometry/Pose2d.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/DriverStation.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 
 #include <frc/controller/SimpleMotorFeedforward.h>
 
@@ -28,7 +29,7 @@ DriveSubsystem::DriveSubsystem()
       m_right2{kRightMotor2Port},
       m_leftEncoder{kLeftEncoderPorts[0], kLeftEncoderPorts[1]},
       m_rightEncoder{kRightEncoderPorts[0], kRightEncoderPorts[1]},
-      m_odometry{m_gyro.GetRotation2d(), units::meter_t{0}, units::meter_t{0}} {
+      m_odometry{frc::Rotation2d(m_gyro.GetAngle(frc::ADIS16470_IMU::IMUAxis::kY)), units::meter_t{0}, units::meter_t{0}} {
   wpi::SendableRegistry::AddChild(&m_drive, &m_left1);
   wpi::SendableRegistry::AddChild(&m_drive, &m_right1);
 
@@ -70,7 +71,9 @@ DriveSubsystem::DriveSubsystem()
 
 void DriveSubsystem::Periodic() {
   // Implementation of subsystem periodic method goes here.
-  m_odometry.Update(m_gyro.GetRotation2d(),
+  frc::SmartDashboard::PutNumber("Left", GetLeftEncoder().GetDistance());
+  frc::SmartDashboard::PutNumber("Right", GetRightEncoder().GetDistance());
+  m_odometry.Update(frc::Rotation2d(m_gyro.GetAngle(frc::ADIS16470_IMU::IMUAxis::kY)),
                     units::meter_t{m_leftEncoder.GetDistance()},
                     units::meter_t{m_rightEncoder.GetDistance()});
 }
@@ -127,12 +130,12 @@ void DriveSubsystem::SetMaxOutput(double maxOutput) {
 }
 
 units::degree_t DriveSubsystem::GetHeading() const {
-  return m_gyro.GetRotation2d().Degrees();
+  return m_gyro.GetAngle(frc::ADIS16470_IMU::IMUAxis::kY);
 }
 
-double DriveSubsystem::GetTurnRate() {
-  return -m_gyro.GetRate();
-}
+//double DriveSubsystem::GetTurnRate() {
+//  return -m_gyro.GetRate();
+//}
 
 frc::Pose2d DriveSubsystem::GetPose() {
   return m_odometry.GetPose();
@@ -149,7 +152,7 @@ frc::ChassisSpeeds DriveSubsystem::GetChassisSpeeds(){ //Get Wheel speeds from G
 }
 
 void DriveSubsystem::ResetOdometry(frc::Pose2d pose) {
-  m_odometry.ResetPosition(m_gyro.GetRotation2d(),
+  m_odometry.ResetPosition(frc::Rotation2d(m_gyro.GetAngle(frc::ADIS16470_IMU::IMUAxis::kY)),
                            units::meter_t{m_leftEncoder.GetDistance()},
                            units::meter_t{m_rightEncoder.GetDistance()}, pose);
 }

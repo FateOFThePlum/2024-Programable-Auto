@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <frc/ADXRS450_Gyro.h>
+#include <frc/ADIS16470_IMU.h>
 #include <frc/Encoder.h>
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/geometry/Pose2d.h>
@@ -33,7 +33,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
    * @param rot the commanded rotation
    */
   void ArcadeDrive(double fwd, double rot);
-  
+
   /**
    * Drives the robot using ChassisSpeeds.
    * It was made for using pathplanner.
@@ -149,7 +149,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
   frc::Encoder m_rightEncoder;
 
   // The gyro sensor
-  frc::ADXRS450_Gyro m_gyro;
+  frc::ADIS16470_IMU m_gyro;
 
   // Odometry class for tracking robot pose
   frc::DifferentialDriveOdometry m_odometry;
