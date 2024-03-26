@@ -19,6 +19,8 @@
 
 #include <frc/controller/SimpleMotorFeedforward.h>
 
+#include "Constants.h"
+
 using namespace DriveConstants;
 using namespace pathplanner;
 
@@ -83,23 +85,16 @@ void DriveSubsystem::ArcadeDrive(double fwd, double rot) {
 }
 
 void DriveSubsystem::ChassisSpeedTankDrive(frc::ChassisSpeeds ChassisSpeeds){
-  //These values NEED to be put into the constraints file, I am just trying to get a working version right now.
-  //I will Tidy up once the auto is somewhat functional. 
-
-  //Numbers are copied for debugging purposes
-  units::voltage::volt_t kS{2.2755};
-  constexpr auto kV = 2.2997 * 1_V * 1_s / 1_in; //0.00814 * 1_V * 1_s / 1_in;  //0.00935 * 1_V * 1_s / 1_m; 
-  constexpr auto kA = 1.039 * 1_V * 1_s * 1_s / 1_in;//0.00215 * 1_V * 1_s * 1_s / 1_in; //0.000222 * 1_V * 1_s * 1_s / 1_m; 
-
   frc::DifferentialDriveKinematics kinematics{21.75_in}; //Correct for 2023 Robot
-  frc::SimpleMotorFeedforward<units::meters> feedforward(kS, kV, kA); //Put this in a diffent file so it is only called once "exampleClass::feedfoward"?
-  
+  frc::SimpleMotorFeedforward<units::meters> left_feedforward(left_kS, left_kV, left_kA); //Put this in a diffent file so it is only called once "exampleClass::feedfoward"?
+  frc::SimpleMotorFeedforward<units::meters> right_feedforward(right_kS, right_kV, right_kA); 
+
   auto [left, right] = kinematics.ToWheelSpeeds(ChassisSpeeds);
   
-  m_left1.SetVoltage(feedforward.Calculate(left));
-  m_left2.SetVoltage(feedforward.Calculate(left));
-  m_right1.SetVoltage(feedforward.Calculate(right));
-  m_right1.SetVoltage(feedforward.Calculate(right));
+  m_left1.SetVoltage(left_feedforward.Calculate(left));
+  m_left2.SetVoltage(left_feedforward.Calculate(left));
+  m_right1.SetVoltage(right_feedforward.Calculate(right));
+  m_right1.SetVoltage(right_feedforward.Calculate(right));
 }
 
 void DriveSubsystem::TankDriveVolts(units::volt_t left, units::volt_t right) {

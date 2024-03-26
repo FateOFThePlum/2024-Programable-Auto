@@ -44,14 +44,15 @@ inline constexpr auto kEncoderDistancePerPulse =
     // Assumes the encoders are directly mounted on the wheel shafts
     (kWheelDiameter * std::numbers::pi) / static_cast<double>(kEncoderCPR);
 
-// These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
-// These characterization values MUST be determined either experimentally or
-// theoretically for *your* robot's drive. The Robot Characterization
-// Toolsuite provides a convenient tool for obtaining these values for your
-// robot.
-inline constexpr auto ks = 0.22_V;
-inline constexpr auto kv = 1.98 * 1_V * 1_s / 1_m;
-inline constexpr auto ka = 0.2 * 1_V * 1_s * 1_s / 1_m;
+
+constexpr units::voltage::volt_t left_kS{2.2755};
+constexpr auto left_kV = 2.2997 * 1_V * 1_s / 1_in; //0.00814 * 1_V * 1_s / 1_in;  //0.00935 * 1_V * 1_s / 1_m; 
+constexpr auto left_kA = 1.039 * 1_V * 1_s * 1_s / 1_in;//0.00215 * 1_V * 1_s * 1_s / 1_in; //0.000222 * 1_V * 1_s * 1_s / 1_m; 
+
+//Not Correct Values for right side
+constexpr units::voltage::volt_t right_kS{2.2755};
+constexpr auto right_kV = 2.2997 * 1_V * 1_s / 1_in;  
+constexpr auto right_kA = 1.039 * 1_V * 1_s * 1_s / 1_in;
 
 // Example value only - as above, this must be tuned for your drive!
 inline constexpr double kPDriveVel = 8.5;
